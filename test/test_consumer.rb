@@ -89,10 +89,7 @@ class ConsumerTest < Test::Unit::TestCase
 
     assert_equal 'GET', request.method
     assert_equal '/test?key=value', request.path
-    correct_params = "oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"1oO2izFav1GP4kEH2EskwXkCRFg%3D\", oauth_version=\"1.0\""
-    auth_intro, auth_params = request['authorization'].split(' ', 2)
-    assert_equal auth_intro, 'OAuth'
-    assert_equal correct_params.split(', ').sort, auth_params.split(', ').sort
+    assert_matching_headers "OAuth oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"1oO2izFav1GP4kEH2EskwXkCRFg%3D\", oauth_version=\"1.0\"", request['authorization']
   end
 
   def test_that_setting_signature_method_on_consumer_effects_signing
@@ -104,7 +101,7 @@ class ConsumerTest < Test::Unit::TestCase
     token.sign!(request, {:nonce => @nonce, :timestamp => @timestamp})
 
     assert_no_match( /oauth_signature_method="HMAC-SHA1"/, request['authorization'])
-    assert_match(    /oauth_signature_method="PLAINTEXT"/, request['authorization'])
+    assert_match(/oauth_signature_method="PLAINTEXT"/, request['authorization'])
   end
 
   def test_that_setting_signature_method_on_consumer_effects_signature_base_string
@@ -139,29 +136,25 @@ class ConsumerTest < Test::Unit::TestCase
     assert_equal 'POST', request.method
     assert_equal '/test', request.path
     assert_equal 'key=value', request.body
-    correct_params = "oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"26g7wHTtNO6ZWJaLltcueppHYiI%3D\", oauth_version=\"1.0\""
-    auth_intro, auth_params = request['authorization'].split(' ', 2)
-    assert_equal auth_intro, 'OAuth'
-    assert_equal correct_params.split(', ').sort, auth_params.split(', ').sort
+    assert_matching_headers "OAuth oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"26g7wHTtNO6ZWJaLltcueppHYiI%3D\", oauth_version=\"1.0\"", request['authorization']
   end
 
   def test_that_signing_post_params_works
     request = Net::HTTP::Post.new(@request_uri.path)
     request.set_form_data( @request_parameters )
     @token.sign!(request, {:scheme => 'body', :nonce => @nonce, :timestamp => @timestamp})
+  end
 
   def test_that_can_provide_a_block_to_interpret_a_request_token_response
     @consumer.expects(:request).returns(create_stub_http_response)
+  end
 
   def test_that_using_auth_headers_on_get_on_create_signed_requests_works
     request=@consumer.create_signed_request(:get,@request_uri.path+ "?" + request_parameters_to_s,@token,{:nonce => @nonce, :timestamp => @timestamp},@request_parameters)
 
     assert_equal 'GET', request.method
     assert_equal '/test?key=value', request.path
-    correct_params = "oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"1oO2izFav1GP4kEH2EskwXkCRFg%3D\", oauth_version=\"1.0\""
-    auth_intro, auth_params = request['authorization'].split(' ', 2)
-    assert_equal auth_intro, 'OAuth'
-    assert_equal correct_params.split(', ').sort, auth_params.split(', ').sort
+    assert_matching_headers "OAuth oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"1oO2izFav1GP4kEH2EskwXkCRFg%3D\", oauth_version=\"1.0\"", request['authorization']
   end
 
   def test_that_using_auth_headers_on_post_on_create_signed_requests_works
@@ -169,10 +162,7 @@ class ConsumerTest < Test::Unit::TestCase
     assert_equal 'POST', request.method
     assert_equal '/test', request.path
     assert_equal 'key=value', request.body
-    correct_params = "oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"26g7wHTtNO6ZWJaLltcueppHYiI%3D\", oauth_version=\"1.0\""
-    auth_intro, auth_params = request['authorization'].split(' ', 2)
-    assert_equal auth_intro, 'OAuth'
-    assert_equal correct_params.split(', ').sort, auth_params.split(', ').sort
+    assert_matching_headers "OAuth oauth_nonce=\"225579211881198842005988698334675835446\", oauth_signature_method=\"HMAC-SHA1\", oauth_token=\"token_411a7f\", oauth_timestamp=\"1199645624\", oauth_consumer_key=\"consumer_key_86cad9\", oauth_signature=\"26g7wHTtNO6ZWJaLltcueppHYiI%3D\", oauth_version=\"1.0\"", request['authorization']
   end
 
   def test_that_block_is_not_mandatory_for_getting_an_access_token
@@ -243,10 +233,11 @@ class ConsumerTest < Test::Unit::TestCase
     assert_equal "200",@response.code
     assert_equal( "ok=hello&test=this",@response.body)
   end
-  
+
   def test_that_not_setting_ignore_callback_will_include_oauth_callback_in_request_options 
     request_options = {}
     @consumer.stubs(:request).returns(create_stub_http_response)
+  end
 
   def test_get_token_sequence_using_fqdn
     @consumer=OAuth::Consumer.new(
@@ -307,8 +298,8 @@ class ConsumerTest < Test::Unit::TestCase
 #      # is defined for class OpenSSL::SSL::SSLContext
 #      Marshal.dump(consumer)
 #    end
-#  end
-#
+  end
+
   def test_get_request_token_with_custom_arguments
     @consumer=OAuth::Consumer.new(
         "key",
@@ -366,7 +357,7 @@ class ConsumerTest < Test::Unit::TestCase
     # (including the Content-Length header) and that the server received Content-Length bytes of body since it won't process the
     # request & respond until the full body length is received.
   end
-  
+
   private
 
   def create_stub_http_response expected_body=nil
@@ -374,5 +365,11 @@ class ConsumerTest < Test::Unit::TestCase
     stub_http_response.stubs(:code).returns(200)
     stub_http_response.stubs(:body).tap {|expectation| expectation.returns(expected_body) unless expected_body.nil? }
     return stub_http_response
+  end
+
+  protected
+
+  def request_parameters_to_s
+    @request_parameters.map { |k,v| "#{k}=#{v}" }.join("&")
   end
 end
